@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro OS</title>
+    <style>
+        /* --- Шрифты --- */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        /* --- Глобальные стили --- */
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify_content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'VT323', monospace;
+            user-select: none;
+        }
+
+        /* --- Корпус Монитора (Рамки) --- */
+        #monitor {
+            background: #dcdcdc;
+            padding: 20px 20px 40px 20px;
+            border-radius: 20px;
+            box-shadow: 
+                inset 0 0 20px rgba(0,0,0,0.2),
+                0 0 50px rgba(0,0,0,0.5),
+                inset -5px -5px 10px rgba(0,0,0,0.1);
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #b0b0b0;
+        }
+
+        /* Кнопка питания */
+        #monitor::after {
+            content: '';
+            position: absolute;
+            bottom: 15px;
+            right: 30px;
+            width: 15px;
+            height: 15px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse 3s infinite;
+        }
+
+        /* Бренд монитора */
+        #monitor::before {
+            content: 'GEMINI 2000';
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 0 #fff;
+        }
+
+        /* --- Экран --- */
+        #screen {
+            background-color: #000;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 60px / 20px; /* Эффект выпуклого экрана */
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.7);
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="20" viewport="0 0 100 100" style="fill:black;stroke:white;stroke-width:1px;"><polygon points="0,0 12,12 6,12 9,18 6,20 3,13 0,18" /></svg>'), auto;
+        }
+
+        /* --- CRT Эффекты (Полосы и мерцание) --- */
+        .crt-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.5);
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            50% { opacity: 0.92; }
+            100% { opacity: 0.96; }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* --- Сцена 1: Загрузка (BIOS) --- */
+        #boot-screen {
+            color: #00ff00;
+            padding: 40px;
+            font-size: 18px;
+            text-shadow: 0 0 5px #00ff00;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 20px;
+            border: 2px solid #00ff00;
+            margin-top: 20px;
+            padding: 2px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: #00ff00;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* --- Сцена 2: Логин --- */
+        #login-screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: #008080; /* Классический цвет фона */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .window {
+            background: #c0c0c0;
+            border: 2px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 2px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            width: 300px;
+        }
+
+        .title-bar {
+            background: navy; /* Классический синий */
+            color: white;
+            padding: 2px 5px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .window-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: black;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+        }
+
+        input {
+            border: 2px solid #404040;
+            border-right-color: #dfdfdf;
+            border-bottom-color: #dfdfdf;
+            padding: 3px;
+            font-family: 'Tahoma', sans-serif;
+        }
+
+        button {
+            margin-top: 10px;
+            background: #c0c0c0;
+            border: 2px solid #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 5px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:active {
+            border: 2px solid #404040;
+            border-right-color: #dfdfdf;
+            border-bottom-color: #dfdfdf;
+        }
+
+        /* --- Сцена 3: Рабочий стол --- */
+        #desktop {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: #008080;
+            position: relative;
+        }
+
+        .icon {
+            width: 64px;
+            margin: 20px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 12px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        .icon-img {
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            margin-bottom: 5px;
+            border: 1px solid #000;
+            /* Рисуем иконку Сапера CSS-ом */
+            background-image: radial-gradient(circle, black 40%, transparent 40%);
+            background-size: 10px 10px;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: inset 0 0 0 2px #c0c0c0;
+        }
+
+        /* Окно Сапера */
+        #minesweeper-window {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            display: none;
+            width: auto;
+        }
+
+        #minesweeper-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 25px);
+            grid-template-rows: repeat(9, 25px);
+            border: 3px solid #808080;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+        }
+
+        .cell {
+            width: 25px;
+            height: 25px;
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-family: 'Tahoma', sans-serif;
+            cursor: default;
+        }
+
+        .cell.revealed {
+            border: 1px solid #808080;
+            background: #d0d0d0;
+        }
+        
+        .cell.bomb {
+            background: red;
+        }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 28px;
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            padding-left: 5px;
+        }
+
+        .start-btn {
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 2px 10px;
+            font-weight: bold;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="monitor">
+        <div id="screen">
+            <div class="crt-overlay"></div>
+
+            <div id="boot-screen">
+                <div>AWARD MODULAR BIOS v4.51PG, An Energy Star Ally</div>
+                <div>Copyright (C) 1984-98, Award Software, Inc.</div>
+                <br>
+                <div>PENTIUM-II CPU at 400MHz</div>
+                <div>Memory Test: <span id="mem-test">0</span>K OK</div>
+                <br>
+                <div id="boot-detect" style="display:none;">
+                    Detecting IDE Primary Master... WDC AC36400L<br>
+                    Detecting IDE Primary Slave... None<br>
+                    Detecting IDE Secondary Master... TSSTcorp CDDVDW<br>
+                </div>
+                <br>
+                <div id="boot-loading" style="display:none;">
+                    <div>Loading Operating System...</div>
+                    <div class="loading-bar-container">
+                        <div class="loading-bar" id="progress"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="login-screen">
+                <div class="window">
+                    <div class="title-bar">
+                        <span>Вход в систему</span>
+                        <span>X</span>
+                    </div>
+                    <div class="window-content">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Key_icon_1.svg/1024px-Key_icon_1.svg.png" width="40" style="filter: grayscale(100%);">
+                            <div>
+                                <label>Пользователь:</label><br>
+                                <input type="text" id="username" placeholder="Admin"><br>
+                                <label>Пароль:</label><br>
+                                <input type="password" id="password"><br>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <button onclick="login()">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="desktop">
+                <div class="icon" onclick="openMinesweeper()">
+                    <div class="icon-img"></div>
+                    <div>Сапёр</div>
+                </div>
+
+                <div id="minesweeper-window" class="window">
+                    <div class="title-bar">
+                        <span>Сапёр</span>
+                        <span style="cursor:pointer;" onclick="closeMinesweeper()">X</span>
+                    </div>
+                    <div class="window-content" style="background: #c0c0c0;">
+                        <div style="display:flex; justify-content:center; margin-bottom:5px;">
+                            <button onclick="initMinesweeper()">😊</button>
+                        </div>
+                        <div id="minesweeper-grid"></div>
+                    </div>
+                </div>
+
+                <div class="taskbar">
+                    <button class="start-btn">Пуск</button>
+                    <div style="margin-left: auto; margin-right: 10px; font-family: 'Tahoma'; font-size: 12px; border: 1px inset #808080; padding: 2px 5px; background: #c0c0c0;">12:00 PM</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Логика Загрузки (Boot) ---
+        const memTest = document.getElementById('mem-test');
+        const bootDetect = document.getElementById('boot-detect');
+        const bootLoading = document.getElementById('boot-loading');
+        const progressBar = document.getElementById('progress');
+        const bootScreen = document.getElementById('boot-screen');
+        const loginScreen = document.getElementById('login-screen');
+
+        let memory = 0;
+        const totalMemory = 64512; // 64MBish
+
+        // 1. Тест памяти
+        const memInterval = setInterval(() => {
+            memory += 1024;
+            memTest.innerText = memory;
+            if (memory >= totalMemory) {
+                clearInterval(memInterval);
+                setTimeout(step2, 500);
+            }
+        }, 10);
+
+        // 2. Определение дисков
+        function step2() {
+            bootDetect.style.display = 'block';
+            setTimeout(step3, 1500);
+        }
+
+        // 3. Загрузка ОС
+        function step3() {
+            bootLoading.style.display = 'block';
+            let width = 0;
+            const loadInt = setInterval(() => {
+                width += 2;
+                progressBar.style.width = width + '%';
+                if (width >= 100) {
+                    clearInterval(loadInt);
+                    setTimeout(showLogin, 1000);
+                }
+            }, 30);
+        }
+
+        function showLogin() {
+            bootScreen.style.display = 'none';
+            loginScreen.style.display = 'flex';
+        }
+
+        // --- Логика Логина ---
+        function login() {
+            // Принимаем любой логин/пароль
+            loginScreen.style.display = 'none';
+            document.getElementById('desktop').style.display = 'block';
+        }
+
+        // Нажатие Enter на экране логина
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && loginScreen.style.display === 'flex') {
+                login();
+            }
+        });
+
+        // --- Логика Сапёра (Упрощенная) ---
+        const grid = document.getElementById('minesweeper-grid');
+        const size = 9;
+        const bombCount = 10;
+        let cells = [];
+        let bombs = [];
+        let gameOver = false;
+
+        function openMinesweeper() {
+            document.getElementById('minesweeper-window').style.display = 'block';
+            initMinesweeper();
+        }
+
+        function closeMinesweeper() {
+            document.getElementById('minesweeper-window').style.display = 'none';
+        }
+
+        function initMinesweeper() {
+            grid.innerHTML = '';
+            cells = [];
+            bombs = [];
+            gameOver = false;
+            
+            // Генерация бомб
+            while(bombs.length < bombCount) {
+                let r = Math.floor(Math.random() * size * size);
+                if(bombs.indexOf(r) === -1) bombs.push(r);
+            }
+
+            // Создание сетки
+            for(let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.id = i;
+                cell.addEventListener('click', () => clickCell(cell, i));
+                cell.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    if(gameOver || cell.classList.contains('revealed')) return;
+                    cell.innerText = cell.innerText === '🚩' ? '' : '🚩';
+                });
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        function clickCell(cell, index) {
+            if(gameOver || cell.classList.contains('revealed') || cell.innerText === '🚩') return;
+
+            if(bombs.includes(index)) {
+                gameOver = true;
+                cell.classList.add('bomb');
+                cell.innerText = '💣';
+                revealAllBombs();
+                alert('Game Over!'); // Ретро стиль
+            } else {
+                let total = 0;
+                const isLeft = index % size === 0;
+                const isRight = index % size === size - 1;
+
+                // Проверка соседей
+                if (index > 0 && !isLeft && bombs.includes(index - 1)) total++;
+                if (index > size - 1 && !isRight && bombs.includes(index + 1)) total++;
+                if (index > size && bombs.includes(index - size)) total++;
+                if (index > size + 1 && !isLeft && bombs.includes(index - size - 1)) total++;
+                if (index > size - 2 && !isRight && bombs.includes(index - size + 1)) total++;
+                if (index < size * size - size && bombs.includes(index + size)) total++;
+                if (index < size * size - size + 1 && !isLeft && bombs.includes(index + size - 1)) total++;
+                if (index < size * size - size - 1 && !isRight && bombs.includes(index + size + 1)) total++;
+
+                cell.classList.add('revealed');
+                if (total > 0) {
+                    cell.innerText = total;
+                    if (total == 1) cell.style.color = 'blue';
+                    if (total == 2) cell.style.color = 'green';
+                    if (total == 3) cell.style.color = 'red';
+                } else {
+                    // Flood fill (рекурсивное открытие пустых клеток - упрощено)
+                    setTimeout(() => checkNeighbors(index), 10); 
+                }
+            }
+        }
+        
+        // Простая рекурсия для открытия пустых полей
+        function checkNeighbors(index) {
+            const isLeft = index % size === 0;
+            const isRight = index % size === size - 1;
+            
+            let neighbors = [];
+            if (!isLeft) neighbors.push(index - 1);
+            if (!isRight) neighbors.push(index + 1);
+            if (index >= size) neighbors.push(index - size);
+            if (index < size * size - size) neighbors.push(index + size);
+            
+            neighbors.forEach(n => {
+                const neighborCell = cells[n];
+                if(!neighborCell.classList.contains('revealed')) {
+                     clickCell(neighborCell, n);
+                }
+            });
+        }
+
+        function revealAllBombs() {
+            bombs.forEach(index => {
+                cells[index].classList.add('revealed', 'bomb');
+                cells[index].innerText = '💣';
+            });
+        }
+
+    </script>
+</body>
+</html>
