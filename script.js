@@ -1,6 +1,6 @@
 // script.js на GitHub Pages
 
-// !!! ВАША ИСПРАВЛЕННАЯ СТРОКА: !!!
+// !!! ИСПРАВЛЕННЫЙ И ПРАВИЛЬНЫЙ URL: !!!
 const WORKER_BASE_URL = 'https://silence.notabob4.workers.dev'; 
 const API_ENDPOINT = `${WORKER_BASE_URL}/check`;
 
@@ -11,7 +11,7 @@ const contentContainer = document.getElementById('content-container');
  * @param {string} level - Текущий уровень (level_1, level_2, и т.д.)
  */
 async function checkKey(level) {
-    // Находим активное поле ввода ключа по его ID
+    // 1. Получаем ключ. ID поля ввода всегда "key-input"
     const keyInput = document.getElementById('key-input');
     const key = keyInput.value.trim();
 
@@ -20,6 +20,7 @@ async function checkKey(level) {
         return;
     }
     
+    // 2. Отправляем запрос на Worker
     try {
         const response = await fetch(API_ENDPOINT, {
             method: 'POST',
@@ -28,12 +29,13 @@ async function checkKey(level) {
             },
             body: JSON.stringify({
                 key: key,
-                currentLevel: level 
+                currentLevel: level // Текущий уровень для проверки соответствующего ключа
             }),
         });
 
         const result = await response.json();
 
+        // 3. Обрабатываем ответ
         if (result.success) {
             // Ключ ВЕРЕН!
             
@@ -41,7 +43,7 @@ async function checkKey(level) {
             const nextLevelNumber = parseInt(level.split('_')[1]) + 1;
             const nextLevelId = `level_${nextLevelNumber}`;
             
-            // !!! БЕЗОПАСНО ЗАМЕНЯЕМ КОНТЕНТ ПОЛНОСТЬЮ !!!
+            // !!! ЗАМЕНЯЕМ ВЕСЬ КОНТЕНТ В КОНТЕЙНЕРЕ HTML, пришедшим от Worker'а !!!
             contentContainer.innerHTML = result.next_html;
             
             // Обновляем data-level для следующей проверки
@@ -55,7 +57,8 @@ async function checkKey(level) {
             keyInput.value = ''; 
         }
     } catch (error) {
-        console.error('Ошибка API. Проверьте консоль Cloudflare:', error);
-        alert('Произошла ошибка при обращении к серверу.');
+        // Ловим сетевые ошибки (Failed to fetch) или ошибки парсинга
+        console.error('Критическая ошибка API (смотрите Network/Console):', error);
+        alert('Произошла ошибка при обращении к серверу. Проверьте сетевое соединение.');
     }
 }
