@@ -22,8 +22,8 @@ async function checkKey(level) {
             localStorage.setItem('arg_access_token', result.token);
             alert(`Key accepted! Redirecting to ${result.next_level}...`);
 
-            // Перенаправляем на новый роут (например, /level2/, /level3/, /win/)
-            window.location.href = `/${result.next_level}/`;
+            // Перенаправляем на новый роут. Используем относительный путь для Project Page
+            window.location.href = `../${result.next_level}/`;
             
         } else if (result.success && !result.next_level) {
             // Уровень WIN
@@ -40,9 +40,17 @@ async function checkKey(level) {
 
 // Функция для загрузки контента по токену
 async function loadContent() {
-    // Определяем текущий уровень (level1, level2, level3, win)
+    // Извлекаем последний сегмент URL (level1, level2, win), игнорируя имя репо
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    const requestedLevel = pathSegments[pathSegments.length - 1] || 'level1';
+    
+    // Если в пути есть имя репозитория (bobito.github.io), извлекаем следующий сегмент
+    let requestedLevel = 'level1';
+    if (pathSegments.length > 1) {
+        // Берем предпоследний сегмент, если URL оканчивается на слэш, или последний
+        requestedLevel = pathSegments[pathSegments.length - 1];
+    } else if (pathSegments.length === 1 && pathSegments[0] !== 'bobito.github.io') {
+         requestedLevel = pathSegments[0];
+    }
     
     const token = localStorage.getItem('arg_access_token');
     const container = document.getElementById('content-container');
